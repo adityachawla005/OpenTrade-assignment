@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AnimatePresence,
+  animate,
   motion,
   useMotionValue,
+  useReducedMotion,
   useTransform,
   type PanInfo,
 } from "framer-motion";
@@ -47,13 +49,16 @@ export default function SwipeDeck() {
   const [error, setError] = useState<string | null>(null);
   const [exitDir, setExitDir] = useState<1 | -1>(1);
   const busy = useRef(false);
+  const reduced = useReducedMotion();
 
   // Drag state lives on a motion value so the card follows the finger at
   // 60fps without a React render per pointer event.
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-260, 0, 260], [-13, 0, 13]);
-  const backOpacity = useTransform(x, [20, SWIPE_DISTANCE], [0, 1]);
-  const passOpacity = useTransform(x, [-SWIPE_DISTANCE, -20], [1, 0]);
+  const backOpacity = useTransform(x, [16, SWIPE_DISTANCE * 0.8], [0, 1]);
+  const passOpacity = useTransform(x, [-SWIPE_DISTANCE * 0.8, -16], [1, 0]);
+  const backWash = useTransform(x, [0, SWIPE_DISTANCE * 1.6], [0, 0.16]);
+  const passWash = useTransform(x, [-SWIPE_DISTANCE * 1.6, 0], [0.16, 0]);
   const nextScale = useTransform(x, [-260, 0, 260], [1, 0.955, 1]);
   const nextOpacity = useTransform(x, [-260, 0, 260], [1, 0.72, 1]);
 
@@ -79,31 +84,53 @@ export default function SwipeDeck() {
     if (userId) void loadDeck(userId);
   }, [userId, loadDeck]);
 
+  /**
+   * Commit a swipe.
+   *
+   * The card is sent away by animating the SAME motion value a drag uses, so a
+   * button press produces exactly the drag's behaviour: the colour cue lights
+   * up as the card travels, and it leaves in the direction of the choice.
+   * Right (heart) = backed, left (cross) = passed.
+   *
+   * The request is fired first and awaited last — the animation must never
+   * wait on the network, or the deck stutters on a slow connection.
+   */
   const commit = useCallback(
     async (card: DeckCard, direction: "left" | "right") => {
       if (busy.current) return;
       busy.current = true;
 
-      setExitDir(direction === "right" ? 1 : -1);
+      const dir = direction === "right" ? 1 : -1;
+      setExitDir(dir);
+
+      const recorded = fetch("/api/swipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, cardId: card.id, direction }),
+      }).catch(() => {
+        setError("swipe not recorded — is the server still running?");
+      });
+
+      if (!reduced) {
+        await animate(x, dir * 620, {
+          duration: 0.34,
+          ease: [0.32, 0, 0.67, 0],
+        }).finished;
+      }
+
       setTally((t) => ({
         backed: t.backed + (direction === "right" ? 1 : 0),
         passed: t.passed + (direction === "left" ? 1 : 0),
       }));
+      // Card is already off-screen, so dropping it and re-centring the motion
+      // value for the next card happens in the same frame — no snap-back.
       setDeck((d) => (d ? d.slice(1) : d));
       x.set(0);
 
-      try {
-        await fetch("/api/swipe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, cardId: card.id, direction }),
-        });
-      } catch {
-        setError("swipe not recorded — is the dev server still running?");
-      }
+      await recorded;
       busy.current = false;
     },
-    [userId, x],
+    [userId, x, reduced],
   );
 
   const onDragEnd = (card: DeckCard) => (_: unknown, info: PanInfo) => {
@@ -268,39 +295,56 @@ export default function SwipeDeck() {
               initial={{ scale: 0.955, y: 9, opacity: 0.7 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{
-                x: exitDir * 460,
-                y: 24,
-                rotate: exitDir * 22,
                 opacity: 0,
-                transition: { duration: 0.32, ease: [0.32, 0, 0.67, 0] },
+                transition: { duration: reduced ? 0 : 0.01 },
               }}
               transition={{ type: "spring", stiffness: 340, damping: 30 }}
             >
               <StockCard card={top} showVariant={showVariant} />
 
+              {/* Colour cue. Right = backed (accent), left = passed (red).
+                  Driven by the motion value, so it reads identically whether
+                  the card was dragged or a button was pressed. */}
               <motion.div
                 aria-hidden
-                className="pointer-events-none absolute left-5 top-5 rounded-[4px] border-2 px-2.5 py-1 text-[16px] font-bold tracking-[0.04em]"
+                className="pointer-events-none absolute inset-0 rounded-[4px]"
                 style={{
-                  color: "var(--accent)",
-                  borderColor: "var(--accent)",
+                  background: "var(--accent)",
+                  opacity: backWash,
+                }}
+              />
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-[4px]"
+                style={{
+                  background: "var(--alert)",
+                  opacity: passWash,
+                }}
+              />
+
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute left-5 top-5 rounded-[4px] px-3 py-1.5 text-[17px] font-bold tracking-[0.06em]"
+                style={{
+                  color: "#fff",
+                  background: "var(--accent)",
                   opacity: backOpacity,
                   rotate: -10,
                 }}
               >
-                BACK
+                BACKED
               </motion.div>
               <motion.div
                 aria-hidden
-                className="pointer-events-none absolute right-5 top-5 rounded-[4px] border-2 px-2.5 py-1 text-[16px] font-bold tracking-[0.04em]"
+                className="pointer-events-none absolute right-5 top-5 rounded-[4px] px-3 py-1.5 text-[17px] font-bold tracking-[0.06em]"
                 style={{
-                  color: "var(--alert)",
-                  borderColor: "var(--alert)",
+                  color: "#fff",
+                  background: "var(--alert)",
                   opacity: passOpacity,
                   rotate: 10,
                 }}
               >
-                PASS
+                PASSED
               </motion.div>
             </motion.div>
           )}
