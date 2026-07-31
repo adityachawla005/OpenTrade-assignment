@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
   // outside the project.
   outputFileTracingRoot: path.join(__dirname),
 
-  // better-sqlite3 is a native module; it must not be bundled by the server
-  // compiler or the .node binding fails to resolve at runtime.
-  serverExternalPackages: ["better-sqlite3"],
 };
 
 export default nextConfig;

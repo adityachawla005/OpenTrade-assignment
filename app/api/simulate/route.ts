@@ -192,8 +192,8 @@ export async function POST(request: Request) {
         if (pending.length === 0) return;
         written += insertSwipeBatch(pending, "sim");
         pending = [];
-        // Yield so the stream actually flushes to the client — better-sqlite3
-        // is synchronous, and a tight loop would otherwise starve the socket.
+        // Yield so the stream actually flushes to the client — the store is
+        // synchronous, and a tight loop would otherwise starve the socket.
         await new Promise((r) => setImmediate(r));
       };
 
