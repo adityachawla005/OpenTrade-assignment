@@ -1,315 +1,120 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   Swipe A/B — design tokens
+   EDGE — design tokens
 
-   Swiss neo-grotesque. Near-monochrome greyscale carrying the whole structure,
-   with exactly one saturated accent doing all the signalling. Radii are tight
-   (4px, occasionally 2px) rather than soft, tracking is negative, and every
-   number is set in mono. The result reads as instrumentation rather than as a
-   consumer app.
+   Dark by construction, not as a mode: the product is a night-time, one-handed
+   game and the canvas is near-black so the two signal colours can carry real
+   luminance without shouting.
 
-   Structure: a full neutral ramp (#fcfcfc → #121212) + electric blue #1a46f6
-   + a single rust #cf3f2e for the one warning state. Nothing else is coloured.
+   Four accents, no more:
+     up     #2ee6a8   direction: the call went up
+     down   #ff5f56   direction: the call went down
+     brain  #7c8cff   everything to do with knowledge, capacity, rating
+     gold   #f2b544   tiers and rewards only
 
-   The head-to-head verdict resolves as ILLUMINATION vs RECESSION — the winning
-   pole takes the blue, the loser falls back to mid-grey. Colour never carries
-   the verdict alone: the winner is named in words above it, its label is set
-   heavier, and its bar is longer.
-
-   Validated with the dataviz validator against both surfaces:
-     light  #1a46f6 / #cf3f2e — CVD ΔE 31.4, normal-vision ΔE 40.3, contrast ≥3:1
-     dark   #4d70ff / #e05745 — CVD ΔE 27.9, normal-vision ΔE 34.3, contrast ≥3:1
+   Validated with the dataviz validator against the panel surface #12151a:
+     all-pairs CVD ΔE 10.9 (deutan) · normal-vision ΔE 19.6 · contrast ≥3:1.
+   Only the dark-mode fill lightness band fails, deliberately — these are
+   luminous game accents, not chart fills. Up/down never rely on hue alone:
+   every instance carries a ▲/▼ glyph and the word UP or DOWN.
    ========================================================================== */
 
-:root {
-  color-scheme: light;
+@theme {
+  --color-canvas: #08090c;
+  --color-panel: #12151a;
+  --color-panel-2: #191d25;
+  --color-line: #262a33;
+  --color-line-2: #333845;
 
-  /* Neutral ramp */
-  --n-0: #fcfcfc;
-  --n-1: #f7f7f7;
-  --n-2: #f0f0f0;
-  --n-3: #e8e8e8;
-  --n-4: #a8a8a8;
-  --n-5: #7d7d7d;
-  --n-6: #707070;
-  --n-7: #3d3d3d;
-  --n-8: #212121;
-  --n-9: #1a1a1a;
-  --n-10: #121212;
+  --color-ink: #f4f6fa;
+  --color-ink-2: #a6adbb;
+  --color-ink-3: #6d7482;
 
-  --base: var(--n-1);
-  --raised: var(--n-0);
-  --sunken: var(--n-2);
-  --line: var(--n-3);
-  --line-strong: var(--n-4);
+  --color-up: #2ee6a8;
+  --color-down: #ff5f56;
+  --color-brain: #7c8cff;
+  --color-gold: #f2b544;
 
-  --text-1: var(--n-10);
-  --text-2: var(--n-6);
-  --text-3: var(--n-4);
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, "SF Mono", monospace;
 
-  --accent: #1a46f6;
-  --accent-ink: #1539c9;
-  --accent-wash: rgba(26, 70, 246, 0.07);
-  --alert: #cf3f2e;
-  --alert-wash: rgba(207, 63, 46, 0.07);
-  --calm: var(--n-4);
-
-  --invert-bg: var(--n-10);
-  --invert-fg: var(--n-0);
-
-  /* Detail-drawer chart series: two tests, not two poles. */
-  --series-rigorous: #4a3aa7;
-  --series-naive: #e34948;
-  --grid: rgba(18, 18, 18, 0.08);
-
-  /* Tight radii — the Swiss tell. */
-  --r-xs: 2px;
-  --r-sm: 4px;
-  --r-md: 4px;
-  --r-lg: 6px;
-
-  --shadow-1: 0 1px 2px rgba(18, 18, 18, 0.04);
-  --shadow-2: 0 1px 2px rgba(18, 18, 18, 0.04), 0 8px 24px -12px rgba(18, 18, 18, 0.12);
-  --shadow-3: 0 2px 4px rgba(18, 18, 18, 0.05), 0 24px 48px -16px rgba(18, 18, 18, 0.18);
-
-  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --radius-card: 26px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
+@layer base {
+  html {
+    background: var(--color-canvas);
+    -webkit-tap-highlight-color: transparent;
+  }
 
-    --base: #121212;
-    --raised: #1a1a1a;
-    --sunken: #0d0d0d;
-    --line: #2a2a2a;
-    --line-strong: #3d3d3d;
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
 
-    --text-1: #fcfcfc;
-    --text-2: #a8a8a8;
-    --text-3: #707070;
-
-    --accent: #4d70ff;
-    --accent-ink: #7b95ff;
-    --accent-wash: rgba(77, 112, 255, 0.12);
-    --alert: #e05745;
-    --alert-wash: rgba(224, 87, 69, 0.12);
-    --calm: #707070;
-
-    --invert-bg: #fcfcfc;
-    --invert-fg: #121212;
-
-    --series-rigorous: #9085e9;
-    --series-naive: #e66767;
-    --grid: rgba(252, 252, 252, 0.07);
-
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
-    --shadow-3: 0 2px 4px rgba(0, 0, 0, 0.4), 0 24px 48px -16px rgba(0, 0, 0, 0.85);
+  /* Nothing in a game UI should be text-selectable by accident. */
+  button {
+    -webkit-user-select: none;
+    user-select: none;
   }
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  --base: #121212;
-  --raised: #1a1a1a;
-  --sunken: #0d0d0d;
-  --line: #2a2a2a;
-  --line-strong: #3d3d3d;
-
-  --text-1: #fcfcfc;
-  --text-2: #a8a8a8;
-  --text-3: #707070;
-
-  --accent: #4d70ff;
-  --accent-ink: #7b95ff;
-  --accent-wash: rgba(77, 112, 255, 0.12);
-  --alert: #e05745;
-  --alert-wash: rgba(224, 87, 69, 0.12);
-  --calm: #707070;
-
-  --invert-bg: #fcfcfc;
-  --invert-fg: #121212;
-
-  --series-rigorous: #9085e9;
-  --series-naive: #e66767;
-  --grid: rgba(252, 252, 252, 0.07);
-
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
-  --shadow-3: 0 2px 4px rgba(0, 0, 0, 0.4), 0 24px 48px -16px rgba(0, 0, 0, 0.85);
-}
-
-* {
-  border-color: var(--line);
-}
-
-html {
-  background: var(--base);
-}
-
-body {
-  background: var(--base);
-  color: var(--text-1);
-  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  font-feature-settings: "ss01", "cv01";
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior-y: none;
-}
-
-/* ---- Type ---------------------------------------------------------------
-   One family throughout, differentiated by size and tracking rather than by
-   mixing faces. Tracking tightens as size grows — the neo-grotesque discipline.
-   ------------------------------------------------------------------------ */
-
-.display {
-  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  font-weight: 500;
-  letter-spacing: -0.028em;
-  line-height: 1.04;
-}
-
-.display-sm {
-  font-weight: 500;
-  letter-spacing: -0.018em;
-  line-height: 1.15;
-}
-
-/* Every number wears mono. */
-.num {
-  font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-  letter-spacing: -0.02em;
-}
-
-/* Mono, tracked out, uppercase — the section label of a technical document. */
-.eyebrow {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-
-.t1 {
-  color: var(--text-1);
-}
-.t2 {
-  color: var(--text-2);
-}
-.t3 {
-  color: var(--text-3);
-}
-
-/* ---- Surfaces ------------------------------------------------------------ */
-
-.panel {
-  background: var(--raised);
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-}
-
-.well {
-  background: var(--sunken);
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-}
-
-/* Hairline rule used to separate structural blocks. */
-.rule {
-  height: 1px;
-  background: var(--line);
-}
-
-/* ---- Controls ------------------------------------------------------------ */
-
-.btn {
-  border-radius: var(--r-sm);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.006em;
-  transition:
-    background-color 160ms var(--ease),
-    border-color 160ms var(--ease),
-    color 160ms var(--ease),
-    opacity 160ms var(--ease);
-}
-
-.btn-accent {
-  background: var(--accent);
-  color: #fff;
-  border: 1px solid var(--accent);
-}
-.btn-accent:hover:not(:disabled) {
-  background: var(--accent-ink);
-  border-color: var(--accent-ink);
-}
-.btn-accent:disabled {
-  opacity: 0.45;
-}
-
-.btn-quiet {
-  background: var(--raised);
-  color: var(--text-2);
-  border: 1px solid var(--line-strong);
-}
-.btn-quiet:hover:not(:disabled) {
-  color: var(--text-1);
-  background: var(--sunken);
-}
-.btn-quiet:disabled {
-  opacity: 0.4;
-}
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: var(--r-xs);
-}
-
-.swipe-card {
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-input[type="number"] {
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  appearance: none;
-  margin: 0;
-}
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--line-strong);
-  border-radius: 999px;
-  border: 3px solid transparent;
-  background-clip: content-box;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+@layer utilities {
+  /* Section labels and micro-headers — the only place tracking goes positive. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
   }
+
+  /* Every figure in the product. Tabular so numbers don't jitter as they tick. */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .ring-hair {
+    box-shadow: inset 0 0 0 1px var(--color-line);
+  }
+
+  /* One soft light source, top-centre, so panels feel lit rather than filled. */
+  .lit {
+    background:
+      radial-gradient(
+        120% 90% at 50% -10%,
+        rgba(255, 255, 255, 0.055),
+        transparent 60%
+      ),
+      var(--color-panel);
+  }
+
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image: radial-gradient(
+      rgba(255, 255, 255, 0.035) 0.5px,
+      transparent 0.5px
+    );
+    background-size: 3px 3px;
+  }
+}
+
+/* The scrollbar is chrome we never want to see inside a phone-shaped surface. */
+.no-bar {
+  scrollbar-width: none;
+}
+.no-bar::-webkit-scrollbar {
+  display: none;
 }

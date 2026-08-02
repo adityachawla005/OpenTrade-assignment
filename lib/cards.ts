@@ -1,467 +1,344 @@
+import type { Card, Fact, Sector } from "./types";
+
 /**
- * The card deck under test.
+ * Thirteen cards. Every company, ticker and price move here is invented.
  *
- * EVERYTHING HERE IS FICTIONAL. The tickers do not correspond to real listed
- * companies and the theses are illustrative copy written to give the
- * experiment something to measure. Nothing in this file is investment advice.
+ * Every sector appears at least twice, and never back to back:
+ *   Semis 1, 5, 13 · Energy 2, 8 · Retail 3, 10
+ *   Biotech 4, 9   · Banks 6, 11 · Autos 7, 12
  *
- * Each card picks ONE framing axis (see `axes.ts`) and writes its two variants
- * as that axis's two poles for that stock. Three cards per axis, so every axis
- * pools enough traffic to reach a verdict while the deck rotates.
+ * That guarantee is load-bearing. No Fact is ever dead on arrival, so save-or-
+ * skip is always a judgement about *how much* a Fact is worth rather than
+ * whether it's worth anything at all — and a Fact earned early only pays if you
+ * still hold it later.
  *
- * The copy is written TO the axis, not merely labelled with it. A card on the
- * risk-upside axis genuinely leads with the downside in one variant and the
- * opportunity in the other, and nothing else about the two is meant to differ.
- * That is what makes pooling across cards measure the framing rather than an
- * accident of wording.
+ * The second card in each sector is deliberately the mirror of the first: the
+ * same principle, pointing the other way. LOOMS punishes inventory outrunning
+ * sales, MRSH rewards it collapsing. Holding the Fact isn't enough — you have
+ * to have understood it.
  */
-
-import { fnv1a } from "./assign";
-import type { AxisId, PoleId } from "./axes";
-
-export interface CardVariant {
-  /** The axis this variant participates in. */
-  axis: AxisId;
-  /** Which pole of that axis this variant embodies. */
-  pole: PoleId;
-  thesis: string;
-  catalyst: string;
-  risk: string;
-  sizing: string;
-}
-
-/** Just the rendered copy — what the content hash is computed over. */
-export type CardVariantContent = Pick<
-  CardVariant,
-  "thesis" | "catalyst" | "risk" | "sizing"
->;
-
-export interface Card {
-  id: string;
-  ticker: string;
-  company: string;
-  sector: string;
-  /** The axis both variants belong to. */
-  axis: AxisId;
-  variants: Record<"A" | "B", CardVariant>;
-}
-
 export const CARDS: Card[] = [
-  /* ---------------- Axis: risk-first vs upside-first ---------------- */
   {
-    id: "hlxb",
-    ticker: "HLXB",
-    company: "Helixor Biolabs",
+    id: "nvx",
+    ticker: "NVX",
+    company: "Nivara Systems",
+    sector: "Semis",
+    setup:
+      "Nivara beats earnings by 12% and guides above the street. Tonight, its largest customer says it is designing its own chips in-house.",
+    lines: ["Up 40% over three months", "That customer is 34% of revenue"],
+    consensus: 0.71,
+    truth: "DOWN",
+    move: "−8.2%",
+    because:
+      "A beat is history — it was bought weeks before it printed. A top customer going in-house resets the forward revenue line, and the market only ever trades the forward line.",
+    reward: {
+      id: "f-priced-in",
+      sector: "Semis",
+      title: "Beats are already priced",
+      detail:
+        "By the time a semi beats, the beat was the consensus. Only news about future revenue moves the tape.",
+      edge: "read",
+      hint: "Ignore the quarter that just printed. Find the sentence about revenue that hasn't happened yet — that's the one being traded.",
+      rarity: "Sharp",
+    },
+  },
+  {
+    id: "helv",
+    ticker: "HELV",
+    company: "Helvern Energy",
+    sector: "Energy",
+    setup:
+      "A hurricane shuts roughly 20% of Gulf refining capacity for two weeks. Helvern's refineries are all inland and completely untouched.",
+    lines: ["No Helvern asset in the storm path", "Gasoline inventories 9% below average"],
+    consensus: 0.44,
+    truth: "UP",
+    move: "+6.9%",
+    because:
+      "A supply shock lifts the price of the product, not just the cost of the damage. Untouched capacity sells into a tighter market — the outage is a windfall for whoever is still running.",
+    reward: {
+      id: "f-survivor",
+      sector: "Energy",
+      title: "Shocks pay the survivor",
+      detail:
+        "When capacity goes offline, whoever is still online prints. Always ask who is left standing.",
+      edge: "hedge",
+      rarity: "Sharp",
+    },
+  },
+  {
+    id: "looms",
+    ticker: "LOOMS",
+    company: "Loomis & Co.",
+    sector: "Retail",
+    setup:
+      "Loomis posts record holiday revenue and the press release leads with it. Buried on page four: returns hit 31% of orders, and inventory is up 44% year over year.",
+    lines: ["Returns 31% of orders, up from 18%", "Inventory +44% against +19% sales"],
+    consensus: 0.68,
+    truth: "DOWN",
+    move: "−11.4%",
+    because:
+      "Revenue is a headline; inventory is a confession. Goods piling up faster than they sell, while a third of them come back, means the next two quarters get discounted away.",
+    reward: {
+      id: "f-inventory",
+      sector: "Retail",
+      title: "Inventory tells the truth",
+      detail:
+        "In retail, compare inventory growth to sales growth. If stock is outrunning sales, the margin is already gone.",
+      edge: "read",
+      hint: "Skip the revenue line. Put inventory growth next to sales growth — if inventory is winning, the discounts are already written.",
+      rarity: "Sharp",
+    },
+  },
+  {
+    id: "crya",
+    ticker: "CRYA",
+    company: "Cryan Bio",
     sector: "Biotech",
-    axis: "risk-upside",
-    variants: {
-      A: {
-        axis: "risk-upside",
-        pole: "upside-first",
-        thesis:
-          "Its assay platform is winning decentralised-trial contracts faster than anyone modelled.",
-        catalyst: "A Phase II readout could double the addressable market.",
-        risk: "Clinical programmes carry the usual binary risk.",
-        sizing: "Starter position, 1-2%.",
-      },
-      B: {
-        axis: "risk-upside",
-        pole: "risk-first",
-        thesis:
-          "One programme is 70% of this company. If it misses, the stock halves.",
-        catalyst: "That readout lands in March and decides everything.",
-        risk: "There is no funded second act. A miss means raising at a much lower mark.",
-        sizing: "1% at most, and only money you can watch go to zero.",
-      },
+    setup:
+      "Cryan's lead oncology drug misses its primary endpoint in Phase III. It hits two secondary endpoints. The company holds $1.4B in cash — more than its entire market cap.",
+    lines: ["Two secondary endpoints hit", "Market cap $1.1B against $1.4B net cash"],
+    consensus: 0.29,
+    truth: "UP",
+    move: "+18.6%",
+    because:
+      "Trading below net cash means the market has already priced the entire pipeline at zero. When there is nothing left to be disappointed by, any surviving signal is pure upside.",
+    reward: {
+      id: "f-priced-zero",
+      sector: "Biotech",
+      title: "Priced for zero",
+      detail:
+        "Below net cash, the pipeline is valued at nothing. The downside was spent before you arrived.",
+      edge: "hedge",
+      rarity: "Rare",
     },
   },
   {
-    id: "casq",
-    ticker: "CASQ",
-    company: "Cascadia Quantum",
-    sector: "Deep Tech",
-    axis: "risk-upside",
-    variants: {
-      A: {
-        axis: "risk-upside",
-        pole: "upside-first",
-        thesis:
-          "Error-correction research with a real shot at a step-change in the field.",
-        catalyst: "Two lab partnerships could convert into commercial licences.",
-        risk: "Pre-revenue, as early-stage science usually is.",
-        sizing: "Speculative sleeve, 1%.",
-      },
-      B: {
-        axis: "risk-upside",
-        pole: "risk-first",
-        thesis:
-          "Eleven months of cash and no revenue. The next raise is the story, not the science.",
-        catalyst: "A funding announcement matters more here than any lab result.",
-        risk: "Dilution at a lower mark is the base case, not the bear case.",
-        sizing: "0.5% maximum. Treat it as an expense, not a position.",
-      },
+    id: "arcs",
+    ticker: "ARCS",
+    company: "Arcadia Silicon",
+    sector: "Semis",
+    setup:
+      "Arcadia misses on revenue and drops 9% pre-market. Then, on the call, management raises next-year bookings guidance by 30% on datacenter orders.",
+    lines: ["Bookings guidance raised 30%", "Backlog now covers five quarters"],
+    consensus: 0.55,
+    truth: "UP",
+    move: "+12.1%",
+    because:
+      "The miss is the quarter that already happened. Bookings are revenue you haven't earned yet — in semis that backlog is the only number that describes the future.",
+    reward: {
+      id: "f-backlog",
+      sector: "Semis",
+      title: "Backlog beats the print",
+      detail:
+        "Bookings describe next year. The print describes last quarter. Only one of them is still tradeable.",
+      edge: "hedge",
+      rarity: "Common",
     },
   },
-  {
-    id: "qstl",
-    ticker: "QSTL",
-    company: "Quaystone Lending",
-    sector: "Financials",
-    axis: "risk-upside",
-    variants: {
-      A: {
-        axis: "risk-upside",
-        pole: "upside-first",
-        thesis:
-          "A specialty lender earning wide spreads while its deposits reprice in its favour.",
-        catalyst: "Margins expand as 60% of the book reprices this year.",
-        risk: "Credit costs rise if the cycle turns.",
-        sizing: "2-3% position.",
-      },
-      B: {
-        axis: "risk-upside",
-        pole: "risk-first",
-        thesis:
-          "This is a loan book. In a bad cycle charge-offs go from 0.9% to 6% and two years of earnings vanish.",
-        catalyst:
-          "The next credit-quality disclosure tells you which world you are in.",
-        risk: "Concentrated in one region, so a local downturn is a company-level event.",
-        sizing: "2%, never more. One lender is not a portfolio.",
-      },
-    },
-  },
-
-  /* ---------------- Axis: number-led vs story-led ---------------- */
-  {
-    id: "orbx",
-    ticker: "ORBX",
-    company: "Orbex Freight Systems",
-    sector: "Logistics",
-    axis: "number-story",
-    variants: {
-      A: {
-        axis: "number-story",
-        pole: "story-led",
-        thesis:
-          "A regional consolidator that quietly took over the lanes its competitors walked away from.",
-        catalyst: "New terminals should lift utilisation as the network fills in.",
-        risk: "Freight is cyclical and spreads compress quickly.",
-        sizing: "Core holding, 3-4%.",
-      },
-      B: {
-        axis: "number-story",
-        pole: "number-led",
-        thesis:
-          "Price per mile up 11% while volumes stayed flat — that is pricing power, not growth.",
-        catalyst: "Two terminals open in Q3, adding 18% network capacity.",
-        risk: "In 2019 spreads compressed 40% in two quarters.",
-        sizing: "3%, add below a 20% drawdown.",
-      },
-    },
-  },
-  {
-    id: "numa",
-    ticker: "NUMA",
-    company: "Numath Grid",
-    sector: "Industrials",
-    axis: "number-story",
-    variants: {
-      A: {
-        axis: "number-story",
-        pole: "story-led",
-        thesis:
-          "The grid needs hardening, and this is the specialist utilities call first.",
-        catalyst: "Budget approvals convert a long pipeline into real backlog.",
-        risk: "Order timing depends on regulators, and regulators are slow.",
-        sizing: "2-3%, scaled in over time.",
-      },
-      B: {
-        axis: "number-story",
-        pole: "number-led",
-        thesis:
-          "$2.1bn of backlog against $600m of revenue — three and a half years of work already signed.",
-        catalyst: "Rate cases in two states decide another $400m by year end.",
-        risk: "A single deferral pushes 30% of the pipeline a year to the right.",
-        sizing: "2% now, 4% if the rate cases clear.",
-      },
-    },
-  },
-  {
-    id: "terv",
-    ticker: "TERV",
-    company: "Tervo Materials",
-    sector: "Materials",
-    axis: "number-story",
-    variants: {
-      A: {
-        axis: "number-story",
-        pole: "story-led",
-        thesis:
-          "A coatings supplier riding a retrofit cycle that the market has not caught up with.",
-        catalyst: "New capacity unlocks customers it has been turning away.",
-        risk: "Input costs swing hard and are difficult to hedge.",
-        sizing: "Moderate position, 2-3%.",
-      },
-      B: {
-        axis: "number-story",
-        pole: "number-led",
-        thesis:
-          "9x earnings, growing 20%. The market still models it as a commodity chemical.",
-        catalyst: "A new line commissions in Q2, taking capacity up 35%.",
-        risk: "Feedstock is 45% of COGS and unhedged beyond six months.",
-        sizing: "2.5%, trim above 15x.",
-      },
-    },
-  },
-
-  /* ---------------- Axis: punchy vs hedged ---------------- */
-  {
-    id: "kelv",
-    ticker: "KELV",
-    company: "Kelvin Cold Chain",
-    sector: "Infrastructure",
-    axis: "punchy-hedged",
-    variants: {
-      A: {
-        axis: "punchy-hedged",
-        pole: "hedged",
-        thesis:
-          "A cold-storage owner with inflation-linked leases that should, over time, reprice favourably.",
-        catalyst:
-          "Renewals are expected to come through at higher rents, subject to tenant demand.",
-        risk: "Rate sensitivity may continue to weigh on the multiple for some time.",
-        sizing: "A modest income position, in the region of 3%.",
-      },
-      B: {
-        axis: "punchy-hedged",
-        pole: "punchy",
-        thesis:
-          "Down 40% on rate fear. 80% of its leases go up with inflation automatically.",
-        catalyst: "62% of the book renews in 18 months at ~15% higher rents.",
-        risk: "If rates stay high this stays cheap. That can last years.",
-        sizing: "3%. Reinvest the distributions and wait.",
-      },
-    },
-  },
-  {
-    id: "vntr",
-    ticker: "VNTR",
-    company: "Vantera Robotics",
-    sector: "Automation",
-    axis: "punchy-hedged",
-    variants: {
-      A: {
-        axis: "punchy-hedged",
-        pole: "hedged",
-        thesis:
-          "A warehouse automation supplier that appears well positioned within a large addressable market.",
-        catalyst: "Enterprise pilots may convert to broader rollouts in due course.",
-        risk: "Sales cycles are long, which makes revenue timing difficult to forecast.",
-        sizing: "A measured allocation of around 2-3%.",
-      },
-      B: {
-        axis: "punchy-hedged",
-        pole: "punchy",
-        thesis:
-          "Three of the five biggest grocery chains already run its arms. The fourth is deciding now.",
-        catalyst: "That decision lands in Q4 and is worth a quarter of revenue.",
-        risk: "Top three customers are 61% of sales. Lose one and it hurts.",
-        sizing: "2% now. Double it if the fourth signs.",
-      },
-    },
-  },
-  {
-    id: "kryo",
-    ticker: "KRYO",
-    company: "Kryotek Semiconductors",
-    sector: "Semiconductors",
-    axis: "punchy-hedged",
-    variants: {
-      A: {
-        axis: "punchy-hedged",
-        pole: "hedged",
-        thesis:
-          "An analog chipmaker whose design wins should support content growth through the cycle.",
-        catalyst:
-          "Content per unit is expected to continue rising across product generations.",
-        risk: "Semiconductor demand is cyclical and near-term visibility is limited.",
-        sizing: "A long-term holding of approximately 3%.",
-      },
-      B: {
-        axis: "punchy-hedged",
-        pole: "punchy",
-        thesis:
-          "Inventory peaked two quarters ago. This is late-downcycle, not mid.",
-        catalyst: "Restocking starts one to two quarters after that peak. So: now.",
-        risk: "Call the bottom wrong and there is another 30% underneath.",
-        sizing: "1.5% starter. Average in, do not lump in.",
-      },
-    },
-  },
-
-  /* ---------------- Axis: concrete-catalyst vs open-thesis ---------------- */
   {
     id: "mrdn",
     ticker: "MRDN",
-    company: "Meridian Aqua Works",
-    sector: "Water",
-    axis: "catalyst-thesis",
-    variants: {
-      A: {
-        axis: "catalyst-thesis",
-        pole: "open-thesis",
-        thesis:
-          "Municipal water treatment is slow, regulated and inflation-linked — and this operator compounds quietly through it.",
-        catalyst: "Steady contract renewals and the occasional tuck-in acquisition.",
-        risk: "Municipal budgets can delay capital projects indefinitely.",
-        sizing: "Core defensive holding, 3%.",
-      },
-      B: {
-        axis: "catalyst-thesis",
-        pole: "concrete-catalyst",
-        thesis:
-          "Four concessions covering 30% of revenue come up for renewal before June.",
-        catalyst: "The first renewal decision is published on 12 April.",
-        risk: "Losing one concession is a 25% drawdown, not a wobble.",
-        sizing: "3%, reassess the day the April decision lands.",
-      },
+    company: "Meridian Trust",
+    sector: "Banks",
+    setup:
+      "The central bank cuts rates by 50bp. Meridian is a regional lender whose loan book is 80% fixed-rate mortgages, funded almost entirely by floating-rate deposits.",
+    lines: ["Assets: fixed, locked for years", "Funding: floating, reprices now"],
+    consensus: 0.74,
+    truth: "UP",
+    move: "+5.1%",
+    because:
+      "A bank earns the spread between what it pays and what it collects. Fixed assets with floating funding means a cut lowers the cost and leaves the income alone — this is the rare card where the obvious answer is also the right one.",
+    reward: {
+      id: "f-spread",
+      sector: "Banks",
+      title: "Banks trade the spread",
+      detail:
+        "Never ask what rates did. Ask which side of the balance sheet reprices first.",
+      edge: "read",
+      hint: "Rates alone tell you nothing. Find which side reprices first — the side that moves fastest decides the margin.",
+      rarity: "Common",
     },
   },
   {
-    id: "slne",
-    ticker: "SLNE",
-    company: "Solnera Grid Storage",
+    id: "vltr",
+    ticker: "VLTR",
+    company: "Voltra Motors",
+    sector: "Autos",
+    setup:
+      "Voltra cuts prices 15% across the lineup. Orders triple within 48 hours and the stock pops 7% on the headline.",
+    lines: ["Orders 3× in two days", "Gross margin was 11% before the cut"],
+    consensus: 0.66,
+    truth: "DOWN",
+    move: "−9.7%",
+    because:
+      "A price cut that triples orders is a demand problem admitting itself out loud. Volume up, margin down — and the market pays for margin, not for units.",
+    reward: {
+      id: "f-margin",
+      sector: "Autos",
+      title: "Volume isn't margin",
+      detail:
+        "Units are a vanity number. Work out what the cut does to gross margin before you believe the pop.",
+      edge: "read",
+      hint: "Take the price cut off the gross margin before you react to the order book. Ask whether anything is left.",
+      rarity: "Common",
+    },
+  },
+  {
+    id: "ptra",
+    ticker: "PTRA",
+    company: "Petra Fuels",
     sector: "Energy",
-    axis: "catalyst-thesis",
-    variants: {
-      A: {
-        axis: "catalyst-thesis",
-        pole: "open-thesis",
-        thesis:
-          "Grid-scale storage is a decade-long buildout and this integrator is positioned across it.",
-        catalyst: "Falling cell costs and supportive policy keep demand compounding.",
-        risk: "Incumbents are entering and competition is intensifying.",
-        sizing: "Thematic sleeve, 2%.",
-      },
-      B: {
-        axis: "catalyst-thesis",
-        pole: "concrete-catalyst",
-        thesis:
-          "1.8 GWh of signed offtake starts converting to revenue next quarter.",
-        catalyst: "The first utility contract begins delivery on 1 October.",
-        risk: "Fixed-price contracts mean any cell cost inflation lands on them.",
-        sizing: "2%, stop out if gross margin breaks 18%.",
-      },
+    setup:
+      "OPEC surprises with a production cut and crude jumps 9% in a session. Petra is a refiner: it buys crude and sells gasoline.",
+    lines: ["Crude +9%, gasoline futures +1%", "Only 20% of input cost hedged"],
+    consensus: 0.63,
+    truth: "DOWN",
+    move: "−6.3%",
+    because:
+      "Refiners don't sell oil, they buy it. Crude spiking while gasoline stays put compresses the crack spread — the input got expensive and the output didn't follow.",
+    reward: {
+      id: "f-barrel",
+      sector: "Energy",
+      title: "Know which side of the barrel",
+      detail:
+        "Producers sell crude; refiners buy it. The same headline is a gift to one and a tax on the other.",
+      edge: "read",
+      hint: "Before you read the oil price, decide whether this company is buying the barrel or selling it. The answer flips the sign.",
+      rarity: "Sharp",
     },
   },
   {
-    id: "aeth",
-    ticker: "AETH",
-    company: "Aetheron Aerospace",
-    sector: "Aerospace",
-    axis: "catalyst-thesis",
-    variants: {
-      A: {
-        axis: "catalyst-thesis",
-        pole: "open-thesis",
-        thesis:
-          "A tier-two aerostructures supplier on a platform that should run for decades.",
-        catalyst: "Production rates rise as the airframer works through its backlog.",
-        risk: "Programme delays push everything to the right.",
-        sizing: "Patient 2-3% position.",
-      },
-      B: {
-        axis: "catalyst-thesis",
-        pole: "concrete-catalyst",
-        thesis:
-          "The airframer's rate-8 decision is scheduled for 30 November. That date is the whole thesis.",
-        catalyst:
-          "Rate 8 confirmed on 30 November; every unit past rate 7 drops 40% incremental margin.",
-        risk: "Rate guidance has already slipped twice. A third slip breaks the maths.",
-        sizing: "2% now, 4% only once rate 7 is confirmed.",
-      },
+    id: "kelp",
+    ticker: "KELP",
+    company: "Kelvin Therapeutics",
+    sector: "Biotech",
+    setup:
+      "The FDA approves Kelvin's rare-disease drug ahead of schedule. The stock has run 210% into the decision.",
+    lines: ["Stock +210% over four months", "Peak sales estimate unchanged all year"],
+    consensus: 0.77,
+    truth: "DOWN",
+    move: "−14.8%",
+    because:
+      "The approval was the trade, and the trade is over. A 210% run into a binary event means the good outcome was already bought — the sellers were waiting for the news to sell into.",
+    reward: {
+      id: "f-sell-news",
+      sector: "Biotech",
+      title: "Sell the news",
+      detail:
+        "Measure the run into the event. If the good outcome is already paid for, the good outcome is a top.",
+      edge: "hedge",
+      rarity: "Rare",
+    },
+  },
+  {
+    id: "mrsh",
+    ticker: "MRSH",
+    company: "Marsh & Vale",
+    sector: "Retail",
+    setup:
+      "Marsh & Vale reports flat revenue and the stock is down 22% on the year. Inventory is down 31% while same-store sales are up 4%.",
+    lines: ["Inventory −31%, sales +4%", "No new stores planned"],
+    consensus: 0.31,
+    truth: "UP",
+    move: "+13.7%",
+    because:
+      "Flat revenue with inventory down a third means they sold the old stock at full price. Clean shelves going into a season is a margin story the revenue line reports last.",
+    reward: {
+      id: "f-shelves",
+      sector: "Retail",
+      title: "Clean shelves come first",
+      detail:
+        "Falling inventory against rising sales is the setup before a margin beat.",
+      edge: "hedge",
+      rarity: "Sharp",
+    },
+  },
+  {
+    id: "holb",
+    ticker: "HOLB",
+    company: "Holbrook Financial",
+    sector: "Banks",
+    setup:
+      "The central bank raises rates 75bp. Holbrook's book is 85% fixed-rate mortgages written three years ago, funded by overnight deposits.",
+    lines: ["Assets: fixed, locked for years", "Funding: overnight, reprices tonight"],
+    consensus: 0.69,
+    truth: "DOWN",
+    move: "−10.6%",
+    because:
+      "Rate moves don't have a direction for banks, they have a side. Fixed assets funded by overnight money means the cost jumps tonight and the income can't follow for years.",
+    reward: {
+      id: "f-duration",
+      sector: "Banks",
+      title: "Duration is the risk",
+      detail:
+        "The danger isn't rates. It's the gap between how long assets are locked and how fast funding moves.",
+      edge: "read",
+      hint: "Measure the gap: how long are the assets locked, how fast does the funding reprice? The wider the gap, the harder a rate move lands.",
+      rarity: "Rare",
+    },
+  },
+  {
+    id: "kast",
+    ticker: "KAST",
+    company: "Kastner Automotive",
+    sector: "Autos",
+    setup:
+      "Kastner raises prices 8% and discontinues its cheapest model. Order volume falls 12% and the stock drops on the headline.",
+    lines: ["Orders −12%, average price +8%", "Gross margin 11% → 17%"],
+    consensus: 0.35,
+    truth: "UP",
+    move: "+11.2%",
+    because:
+      "Fewer cars at a much better price is more profit. They walked away from units they barely made money on — the market pays for margin, not volume, in both directions.",
+    reward: {
+      id: "f-fewer",
+      sector: "Autos",
+      title: "Fewer, better",
+      detail:
+        "Dropping unprofitable volume is a margin decision, not a demand problem. Read the mix, not the units.",
+      edge: "hedge",
+      rarity: "Sharp",
+    },
+  },
+  {
+    id: "sltc",
+    ticker: "SLTC",
+    company: "Siltech Micro",
+    sector: "Semis",
+    setup:
+      "Siltech's fab yields fall to 61% and it cuts guidance. Meanwhile its only competitor has had a fire at its main plant and will be offline for six months.",
+    lines: ["Yields 61%, down from 84%", "Only rival offline until Q3"],
+    consensus: 0.34,
+    truth: "UP",
+    move: "+15.3%",
+    because:
+      "Bad yields matter when the customer has somewhere else to go. With the only alternative offline, a struggling supplier becomes the only supplier — pricing power arrives from outside the company.",
+    reward: {
+      id: "f-relative",
+      sector: "Semis",
+      title: "Supply is relative",
+      detail:
+        "A company is only as weak as its alternatives. Check the competitor before you judge the operator.",
+      edge: "read",
+      hint: "Don't grade this company on its own numbers. Look at what the customer's alternative is — if there isn't one, the numbers stop mattering.",
+      rarity: "Rare",
     },
   },
 ];
 
-export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));
+/** Every Fact in the game. Facts are stored by id, so copy can change freely. */
+export const ALL_FACTS: Fact[] = CARDS.map((c) => c.reward);
+export const FACT_BY_ID = new Map<string, Fact>(
+  ALL_FACTS.map((f) => [f.id, f]),
+);
 
-export function getCard(id: string): Card | undefined {
-  return CARD_BY_ID.get(id);
-}
+export const SECTORS: Sector[] = [
+  "Semis",
+  "Energy",
+  "Retail",
+  "Biotech",
+  "Banks",
+  "Autos",
+];
 
-/** Cards currently testing a given axis. */
-export function cardsOnAxis(axisId: AxisId): Card[] {
-  return CARDS.filter((c) => c.axis === axisId);
-}
-
-/** The pole a given card variant embodies. */
-export function poleOf(card: Card, variant: "A" | "B"): PoleId {
-  return card.variants[variant].pole;
-}
-
-/* ------------------------------------------------------------------------
- * Content hashing — what makes a variant a *treatment* rather than a label.
- *
- * "Variant B" is not a stable thing. It is whatever copy variant B happened
- * to be showing at the time. Edit the thesis and the swipes collected before
- * and after measured two different treatments; pooling them under one label
- * produces a confident wrong answer, which is the one failure mode this whole
- * project exists to prevent.
- *
- * So each variant carries a hash of the copy actually rendered, the swipe log
- * records it, and a verdict only counts swipes that saw the copy live today.
- *
- * Normalisation: each field is trimmed and its internal whitespace collapsed
- * before hashing. Re-wrapping a line or fixing double spaces therefore does
- * NOT reset an experiment, while any real character change does. Fields are
- * joined with U+001F (unit separator), a character that cannot occur in the
- * copy, so moving text between fields cannot collide with leaving it put.
- *
- * The axis and pole tags are deliberately NOT hashed: they describe where a
- * swipe is counted, not what the user read.
- * ---------------------------------------------------------------------- */
-
-const FIELD_SEPARATOR = "";
-
-function normalizeField(value: string): string {
-  return value.trim().replace(/\s+/g, " ");
-}
-
-/** Canonical string a variant's hash is computed over. Exported for tests. */
-export function canonicalizeVariant(content: CardVariantContent): string {
-  return [content.thesis, content.catalyst, content.risk, content.sizing]
-    .map(normalizeField)
-    .join(FIELD_SEPARATOR);
-}
-
-/**
- * 64-bit content hash as 16 hex chars, built from two FNV-1a passes over the
- * canonical string. Dependency-free so it runs identically on server and
- * client; 64 bits makes an accidental collision across a deck of this size
- * vanishingly unlikely.
- */
-export function contentHash(content: CardVariantContent): string {
-  const canonical = canonicalizeVariant(content);
-  const lo = fnv1a(canonical);
-  const hi = fnv1a(`${canonical}`);
-  return hi.toString(16).padStart(8, "0") + lo.toString(16).padStart(8, "0");
-}
-
-/** Hash of the copy variant `variant` of `card` is showing right now. */
-export function variantHash(card: Card, variant: "A" | "B"): string {
-  return contentHash(card.variants[variant]);
-}
-
-/** Both live hashes for a card. */
-export function cardHashes(card: Card): { A: string; B: string } {
-  return { A: variantHash(card, "A"), B: variantHash(card, "B") };
-}
-
-export function variantHashById(
-  cardId: string,
-  variant: "A" | "B",
-): string | null {
-  const card = getCard(cardId);
-  return card ? variantHash(card, variant) : null;
-}
+/* Deck composition — what's still ahead — lives in `lib/deck.ts`. */

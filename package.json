@@ -1,14 +1,12 @@
 {
-  "name": "swipe-ab",
-  "version": "1.0.0",
+  "name": "edge",
+  "version": "0.1.0",
   "private": true,
-  "description": "A/B testing layer for a Tinder-style stock-card swiping product, with an always-valid mSPRT sequential test.",
+  "description": "EDGE — a stock-market prediction game where knowledge is a limited resource. Vision prototype.",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "test": "vitest run",
-    "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -23,7 +21,6 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.8.3"
   }
 }

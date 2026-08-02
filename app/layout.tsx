@@ -1,38 +1,28 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Nav from "@/components/Nav";
 import "./globals.css";
 
-/* One neo-grotesque throughout, differentiated by size and tracking rather
-   than by mixing faces — the Swiss discipline the rest of the system follows.
-   Geist is open source (SIL OFL) and sits close to the commercial grotesques
-   this look is usually built on. */
-const body = Geist({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-body",
-});
-
-/* Mono — every number in the product, plus section labels. */
+/* One neo-grotesque for everything, with the mono reserved for figures and
+   micro-labels. Numbers are the substance of this product — they get their own
+   face so they read as instrumentation. */
+const body = Geist({ subsets: ["latin"], display: "swap", variable: "--font-body" });
 const mono = Geist_Mono({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-mono",
+  variable: "--font-mono-face",
 });
 
 export const metadata: Metadata = {
-  title: "Swipe A/B — which way of writing a card gets backed",
+  title: "EDGE — the market game where knowledge is a resource",
   description:
-    "A decision instrument for people who write financial swipe-cards. Tests framing patterns across the whole deck and tells you which one wins.",
+    "Call the market, earn Facts, and fight for room in a Brain that can't hold everything. XP buys rating, rating buys neurons, neurons buy depth.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f7f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#121212" },
-  ],
+  maximumScale: 1,
+  themeColor: "#08090c",
 };
 
 export default function RootLayout({
@@ -41,21 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${body.variable} ${mono.variable}`}
-    >
-      <body className="min-h-dvh">
-        <Nav />
-        {children}
-        <footer className="mx-auto max-w-5xl px-5 pb-14 pt-12 sm:px-8">
-          <div className="border-t pt-5 text-[11.5px] leading-relaxed t3">
-            Every ticker, company and thesis in this product is fictional and
-            exists only to give the experiment something to measure. Nothing
-            here is investment advice.
-          </div>
-        </footer>
-      </body>
+    <html lang="en" className={`${body.variable} ${mono.variable}`}>
+      <body className="min-h-dvh">{children}</body>
     </html>
   );
 }
