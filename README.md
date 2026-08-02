@@ -39,3 +39,4 @@ Manager** 1400 → **Wall Street** 1550, at 5 / 6 / 7 / 8 / 10 neurons. You
 start at 1060, so the first promotion lands inside the first session.
 
 
+# Can be used with OpenTrade games like Runway,News or Higher/Lower
