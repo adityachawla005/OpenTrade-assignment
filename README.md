@@ -1,42 +1,34 @@
-# 1. The Investor Brain — the playable core
+**A market guessing game where the thing you collect isn't money — it's what you've learned.**
 
-Right calls pay **XP** and offer a **Fact** — a reusable principle tied to a
-sector, not a tip about a stock.
+A card describes something that happened to a company. You call it **up** or
+**down**. You find out what happened, and why.
 
-The Brain is measured in **neurons** — one Fact, one neuron. Rookie has 5
-against a 13-Fact deck, so you are leaving most of it behind from the very
-first run; the top tier has 10. (The cost model is a single function, `neuronCost` in
-`lib/elo.ts`, if Facts ever need to be priced differently.)
+Right calls pay **XP** and a **Fact** — a rule that works on a whole sector,
+like *"Inventory tells the truth."*
 
-Three decisions make the loop:
+**But you can't keep them all.** Your Brain holds 5 neurons. The deck has 13
+Facts. Every one you earn asks: *save it or skip it?* One tap. Full Brain means
+something has to go.
 
-**Save or skip.** Every earned Fact is asked about, not deposited — *is this
-worth a neuron?* The keep screen shows what the Fact does, how many cards of its
-sector are still in the deck, and your budget with the Fact previewed into it.
-Saving indiscriminately fills your head with Facts for sectors that aren't
-coming, which is the lesson.
+That's the game. Not "do I know this" — **"is this worth the space?"**
 
-**What to drop.** If it doesn't fit, you choose what to release, with the budget
-tracking live and the trade blocked until it actually fits.
+Two kinds of Fact:
 
-**What to play.** Facts never fire on their own. A card shows every held Fact
-that matches its sector, with a soft pulse on the ones you haven't used, and
-applying one is always a tap you make:
+- **Read** — shows you the angle before you call. Free, reusable, forever.
+- **Hedge** — arm it and it eats a wrong call, or becomes an extra life on a right one. Spent only when it actually does one of those.
 
-- **Read** — apply it to unlock a line of analysis before you call. Never runs out.
-- **Hedge** — arm it to absorb a miss, or convert it to a life on a right call. Spent only if you arm it, so *which card you spend it on* is the decision.
+Nothing fires on its own. The game shows you what's usable; you decide.
 
-Miss a match and nothing bad happens — the reveal just points out what was
-playable. Assisted, never punished.
+**Rank up and your Brain grows** — 5 neurons at Rookie, 10 at Wall Street. Hard
+calls the crowd gets wrong pay ~5× the obvious ones, so the rating tracks skill,
+not luck. Every Fact you find is yours forever; your rank only decides how many
+you can carry in.
 
-Holding the Fact isn't enough — you have to have
-understood it.
+Play well → rank up → bigger Brain → harder cards become readable → play better.
 
+---
 
+Fictional companies and prices throughout. Not investment advice.
 
-Tiers: **Rookie** 0 → **Analyst** 1100 → **Trader** 1250 → **Portfolio
-Manager** 1400 → **Wall Street** 1550, at 5 / 6 / 7 / 8 / 10 neurons. You
-start at 1060, so the first promotion lands inside the first session.
-
-
-# Can be used with OpenTrade games like Runway,News or Higher/Lower
+**Reusable:** the Brain drops into any OpenTrade game with repeated judgement
+calls — Runway, News, Higher/Lower. The deck changes; the Brain doesn't.
