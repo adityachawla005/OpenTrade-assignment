@@ -6,11 +6,11 @@ A card describes something that happened to a company. You call it **up** or
 Right calls pay **XP** and a **Fact** — a rule that works on a whole sector,
 like *"Inventory tells the truth."*
 
-**Store the Fact using The Brain feature**
 
 **But you can't keep them all.** Your Brain holds 5 neurons. The deck has 13
 Facts. Every one you earn asks: *save it or skip it?* One tap. Full Brain means
-something has to go.
+something has to go.Passive facts don't stick, but when you can only keep a few, you're forced to decide what matters and actually remember it.
+
 
 That's the game. Not "do I know this" — **"is this worth the space?"**
 
